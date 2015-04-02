@@ -1,0 +1,129 @@
+/* 
+    Please include compiler name below (you may also include any other modules you would like to be loaded)
+
+COMPILER= gnu
+
+    Please include All compiler flags and libraries as you want them run. You can simply copy this over from the Makefile's first few lines
+ 
+CC = cc
+OPT = -O3
+CFLAGS = -Wall -std=gnu99 -unroll-loops $(OPT)
+MKLROOT = /opt/intel/composer_xe_2013.1.117/mkl
+LDLIBS = -lrt -Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_sequential.a $(MKLROOT)/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread -lm
+
+*/
+
+const char* dgemm_desc = "Simple blocked dgemm.";
+
+#define BLOCK_SIZE_l1 32
+//#define BLOCK_SIZE_l2 30
+#define BLOCK_SIZE_l3 512
+
+#define min(a,b) (((a)<(b))?(a):(b))
+
+/* This auxiliary subroutine performs a smaller dgemm operation
+ *  C := C + A * B
+ * where C is M-by-N, A is M-by-K, and B is K-by-N. */
+static void do_block_l1 (int lda, int M, int N, int K, const double* A, const double* B, double* C)
+{
+  /* For each row i of A */
+  for (int i = 0; i < M; ++i)
+    /* For each column j of B */ 
+    for (int j = 0; j < N; ++j) 
+    {
+      /* Compute C(i,j) */
+      double cij = 0, cij_1=0, cij_2=0, cij_3=0;//, cij_4=0, cij_5=0, cij_6=0, cij_7=0;
+	int k = 0;
+	for (; k < K - 3; k += 4)
+	{
+		cij += A[i+k*lda] * B[k+j*lda];
+		cij_1 += A[i+(k+1)*lda] * B[(k+1)+j*lda];
+		cij_2 += A[i+(k+2)*lda] * B[(k+2)+j*lda];
+		cij_3 += A[i+(k+3)*lda] * B[(k+3)+j*lda];
+//		cij_4 += A[i+(k+4)*lda] * B[(k+4)+j*lda];
+//		cij_5 += A[i+(k+5)*lda] * B[(k+5)+j*lda];
+//		cij_6 += A[i+(k+6)*lda] * B[(k+6)+j*lda];
+//		cij_7 += A[i+(k+7)*lda] * B[(k+7)+j*lda];
+	}
+//      for (; k < K - 1; k += 2)
+//	{
+//		cij += (A[i+k*lda] * B[k+j*lda]) + (A[i+(k+1)*lda] * B[(k+1)+j*lda]);
+//	}
+      for (; k < K; ++k)
+	cij += A[i+k*lda] * B[k+j*lda];
+//	cij += cij_1 + cij_2 + cij_3;
+//	cij_4 += cij_5 + cij_6 + cij_7;
+	cij += cij_1;
+	cij_2 += cij_3;
+      C[i+j*lda] += cij + cij_2;
+    }
+}
+
+/* This routine performs a dgemm operation
+ *  C := C + A * B
+ * where A, B, and C are lda-by-lda matrices stored in column-major format. 
+ * On exit, A and B maintain their input values. */  
+//void do_block_l2 (int lda, int l, int m, int n, const double* A, const double* B, double* C)
+//{
+//  /* For each block-row of A */ 
+//  for (int i = 0; i < l; i += BLOCK_SIZE_l1)
+//    /* For each block-column of B */
+//    for (int j = 0; j < m; j += BLOCK_SIZE_l1)
+//      /* Accumulate block dgemms into block of C */
+//      for (int k = 0; k < n; k += BLOCK_SIZE_l1)
+//      {
+//	/* Correct block dimensions if block "goes off edge of" the matrix */
+//	int M = min (BLOCK_SIZE_l1, l-i);
+//	int N = min (BLOCK_SIZE_l1, m-j);
+//	int K = min (BLOCK_SIZE_l1, n-k);
+//
+//	/* Perform individual block dgemm */
+//	do_block_l1(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
+//      }
+//}
+
+/* This routine performs a dgemm operation
+ *  C := C + A * B
+ * where A, B, and C are lda-by-lda matrices stored in column-major format. 
+ * On exit, A and B maintain their input values. */  
+void do_block_l3 (int lda, int l, int m, int n, const double* A, const double* B, double* C)
+{
+  /* For each block-row of A */ 
+  for (int i = 0; i < l; i += BLOCK_SIZE_l1)
+    /* For each block-column of B */
+    for (int j = 0; j < m; j += BLOCK_SIZE_l1)
+      /* Accumulate block dgemms into block of C */
+      for (int k = 0; k < n; k += BLOCK_SIZE_l1)
+      {
+	/* Correct block dimensions if block "goes off edge of" the matrix */
+	int M = min (BLOCK_SIZE_l1, l-i);
+	int N = min (BLOCK_SIZE_l1, m-j);
+	int K = min (BLOCK_SIZE_l1, n-k);
+
+	/* Perform individual block dgemm */
+	do_block_l1(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
+      }
+}
+
+/* This routine performs a dgemm operation
+ *  C := C + A * B
+ * where A, B, and C are lda-by-lda matrices stored in column-major format. 
+ * On exit, A and B maintain their input values. */  
+void square_dgemm (int lda, const double* A, const double* B, double* C)
+{
+  /* For each block-row of A */ 
+  for (int i = 0; i < lda; i += BLOCK_SIZE_l3)
+    /* For each block-column of B */
+    for (int j = 0; j < lda; j += BLOCK_SIZE_l3)
+      /* Accumulate block dgemms into block of C */
+      for (int k = 0; k < lda; k += BLOCK_SIZE_l3)
+      {
+	/* Correct block dimensions if block "goes off edge of" the matrix */
+	int M = min (BLOCK_SIZE_l3, lda-i);
+	int N = min (BLOCK_SIZE_l3, lda-j);
+	int K = min (BLOCK_SIZE_l3, lda-k);
+
+	/* Perform individual block dgemm */
+	do_block_l3(lda, M, N, K, A + i + k*lda, B + k + j*lda, C + i + j*lda);
+      }
+}

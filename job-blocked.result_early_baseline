@@ -1,0 +1,34 @@
+Unloading compiler-dependent module mvapich2_ib/1.9
+Unloading compiler-dependent module mvapich2_ib/1.9
+Description:	Simple blocked dgemm.
+
+Size: 31	Mflop/s:  1010.88	Percentage: 10.53
+Size: 32	Mflop/s:  1016.27	Percentage: 10.59
+Size: 96	Mflop/s:  1004.44	Percentage: 10.46
+Size: 97	Mflop/s:  1013.95	Percentage: 10.56
+Size: 127	Mflop/s:  1038.57	Percentage: 10.82
+Size: 128	Mflop/s:  969.102	Percentage: 10.09
+Size: 129	Mflop/s:  1043.07	Percentage: 10.87
+Size: 191	Mflop/s:     1026	Percentage: 10.69
+Size: 192	Mflop/s:  1014.83	Percentage: 10.57
+Size: 229	Mflop/s:   1006.2	Percentage: 10.48
+Size: 255	Mflop/s:  986.508	Percentage: 10.28
+Size: 256	Mflop/s:  564.136	Percentage:  5.88
+Size: 257	Mflop/s:  988.238	Percentage: 10.29
+Size: 319	Mflop/s:  1030.54	Percentage: 10.73
+Size: 320	Mflop/s:  1017.06	Percentage: 10.59
+Size: 321	Mflop/s:  1031.78	Percentage: 10.75
+Size: 417	Mflop/s:  1034.04	Percentage: 10.77
+Size: 479	Mflop/s:  1024.19	Percentage: 10.67
+Size: 480	Mflop/s:  1008.34	Percentage: 10.50
+Size: 511	Mflop/s:  945.284	Percentage:  9.85
+Size: 512	Mflop/s:  441.824	Percentage:  4.60
+Size: 639	Mflop/s:  1013.81	Percentage: 10.56
+Size: 640	Mflop/s:  941.521	Percentage:  9.81
+Size: 767	Mflop/s:   960.75	Percentage: 10.01
+Size: 768	Mflop/s:  559.615	Percentage:  5.83
+Size: 769	Mflop/s:  961.122	Percentage: 10.01
+Average percentage of Peak = 9.87663
+Grade = 14.8149
+Nodes:        trestles-4-6
+Unloading compiler-dependent module mvapich2_ib/1.9
